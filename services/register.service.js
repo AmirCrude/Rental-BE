@@ -12,11 +12,6 @@ const registerUser = async (userData) => {
     last_name,
     phone_number,
     role,
-    national_id,
-    document_type,
-    specialization,
-    years_of_experience,
-    file,
   } = userData;
 
   // Check if email is already registered
@@ -36,20 +31,8 @@ const registerUser = async (userData) => {
     last_name,
     phone_number,
     role,
-    national_id,
-    is_verified,
   });
-  // Save lawyer professional information if the user is a lawyer
-  if (role === "lawyer") {
-    await registerQuery.addLawyerDocument({
-      lawyer_id: newUser.user_id,
-      document_type: document_type || null,
-      document_url,
-      cloudinary_public_id: document_public_id,
-      specialization,
-      years_of_experience,
-    });
-  }
+  
 
   // Send registration email
   await sendRegistrationEmail(email, first_name, role);

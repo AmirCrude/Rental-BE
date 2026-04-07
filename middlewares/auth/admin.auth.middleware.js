@@ -10,7 +10,7 @@ const requireAdmin = (req, res, next) => {
   if (req.user.role !== "super_admin") {
     return res.status(403).json({
       status: "error",
-      message: "Access denied. Only super admins can perform this action.",
+      message: "Access denied. Only admins can perform this action.",
     });
   }
 

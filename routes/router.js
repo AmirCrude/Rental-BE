@@ -11,10 +11,6 @@ const router = express.Router();
 
 router.use("/auth", authRouter);
 router.use("/admin", adminRouter);
-router.use(profileRouter);
 router.use(registerRouter);
-router.use(fileRouter);
-router.use(reportRouter);
-router.use(commentRouter);
 
 module.exports = router;

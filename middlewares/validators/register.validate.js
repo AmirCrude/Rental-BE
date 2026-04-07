@@ -1,11 +1,13 @@
 const Joi = require("joi");
 
 // ---------------------
-// Registration schema with lawyer fields
+// Registration schema
 const registrationSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  name: Joi.string().max(100).required(),
+  first_name: Joi.string().max(100).required(),
+  last_name: Joi.string().max(100).required(),
+  phone_number: Joi.string().max(20).required(),
 });
 
 // ---------------------

@@ -2,12 +2,8 @@ const express = require("express");
 const router = express.Router();
 
 // Controller
-const { createGovernmentOfficial } = require("../controllers/admin.controller");
 
 // Validator
-const {
-  validateCreateGovernmentOfficial,
-} = require("../middlewares/validators/admin.validate");
 
 // Authentication & Role
 const { authMiddleware } = require("../middlewares/auth/auth.middleware");
@@ -21,9 +17,7 @@ router.post(
   "/government-official",
   authMiddleware,
   requireAdmin,
-  checkJson,
-  validateCreateGovernmentOfficial,
-  createGovernmentOfficial
+  checkJson
 );
 
 module.exports = router;
