@@ -28,47 +28,74 @@ const createProperty = async (propertyData) => {
 
   const result = await query(sql, params);
 
-  // Return the newly inserted property (full object with id + timestamps)
   const [property] = await query("SELECT * FROM properties WHERE id = ?", [
     result.insertId,
   ]);
   return property;
 };
 
-// ====================== READ - ALL PROPERTIES (with filters) ======================
+// ====================== READ - ALL PROPERTIES (FULL FILTERING) ======================
 const getAllProperties = async (filters = {}) => {
   let sql = `
-    SELECT * FROM properties 
-    WHERE status = 'active'
+    SELECT p.* FROM properties p
+    WHERE 1=1
   `;
   const params = [];
 
+  // Existing filters
   if (filters.city) {
-    sql += ' AND city = ?';
+    sql += ' AND p.city = ?';
     params.push(filters.city);
   }
   if (filters.district) {
-    sql += ' AND district = ?';
+    sql += ' AND p.district = ?';
     params.push(filters.district);
   }
   if (filters.min_price) {
-    sql += ' AND price >= ?';
+    sql += ' AND p.price >= ?';
     params.push(parseFloat(filters.min_price));
   }
   if (filters.max_price) {
-    sql += ' AND price <= ?';
+    sql += ' AND p.price <= ?';
     params.push(parseFloat(filters.max_price));
   }
   if (filters.property_type) {
-    sql += ' AND property_type = ?';
+    sql += ' AND p.property_type = ?';
     params.push(filters.property_type);
   }
   if (filters.min_bedrooms) {
-    sql += ' AND bedrooms >= ?';
+    sql += ' AND p.bedrooms >= ?';
     params.push(parseInt(filters.min_bedrooms));
   }
 
-  sql += ' ORDER BY created_at DESC';
+  // NEW: availability_status (maps to property.status)
+  if (filters.availability_status) {
+    sql += ' AND p.status = ?';
+    params.push(filters.availability_status);
+  } else {
+    // Default for tenants: only active properties
+    sql += " AND p.status = 'active'";
+  }
+
+  // NEW: amenities filtering (comma-separated IDs, e.g. ?amenities=1,3,5)
+  // Properties must have ALL requested amenities
+  if (filters.amenities) {
+    const amenityIds = filters.amenities.split(',').map(id => id.trim()).filter(Boolean);
+    if (amenityIds.length > 0) {
+      sql += `
+        AND p.id IN (
+          SELECT pa.property_id 
+          FROM property_amenities pa 
+          WHERE pa.amenity_id IN (${amenityIds.map(() => '?').join(',')})
+          GROUP BY pa.property_id 
+          HAVING COUNT(DISTINCT pa.amenity_id) = ?
+        )
+      `;
+      params.push(...amenityIds, amenityIds.length);
+    }
+  }
+
+  sql += ' ORDER BY p.created_at DESC';
 
   const properties = await query(sql, params);
   return properties;
@@ -117,7 +144,6 @@ const updateProperty = async (id, propertyData) => {
     return null;
   }
 
-  // Return the updated property (full object)
   const [updatedProperty] = await query('SELECT * FROM properties WHERE id = ?', [id]);
   return updatedProperty;
 };
