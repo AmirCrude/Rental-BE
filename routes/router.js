@@ -5,6 +5,7 @@ const express = require("express");
 const authRouter = require("./auth.route");
 const adminRouter = require("./admin.route");
 const registerRouter = require("./register.route");
+const propertyRouter = require("./property.route");
 const router = express.Router();
 
 // API routes
@@ -12,5 +13,6 @@ const router = express.Router();
 router.use("/auth", authRouter);
 router.use("/admin", adminRouter);
 router.use(registerRouter);
+router.use("/properties", propertyRouter);
 
 module.exports = router;
