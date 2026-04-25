@@ -8,9 +8,8 @@ const registerUser = async (userData) => {
   const {
     email,
     password,
-    first_name,
-    last_name,
     phone_number,
+    name,
     role,
   } = userData;
 
@@ -27,15 +26,14 @@ const registerUser = async (userData) => {
   const newUser = await registerQuery.register({
     email,
     password_hash,
-    first_name,
-    last_name,
     phone_number,
+    name,
     role,
   });
   
 
   // Send registration email
-  await sendRegistrationEmail(email, first_name, role);
+  await sendRegistrationEmail(email, name, role);
 
   return newUser;
 };

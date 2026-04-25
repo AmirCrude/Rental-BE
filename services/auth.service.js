@@ -47,7 +47,7 @@ const forgotPassword = async (email) => {
   if (!user) return { success: false, message: "Email not found" };
 
   const token = jwt.sign(
-    { userId: user.user_id, role: user.role },
+    { userId: user.user_id, email: user.email, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );

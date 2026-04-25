@@ -9,7 +9,7 @@ const {
 
 // Middleware
 const { authMiddleware } = require("../middlewares/auth/auth.middleware.js");
-const uploadImageMiddleware = require("../middlewares/upload/upload.image.middleware.js");
+const { uploadSingleImageMiddleware  } = require("../middlewares/upload/upload.image.middleware.js");
 
 // ====================== PUBLIC ROUTE ======================
 router.get("/:propertyId/images", getPropertyImages);
@@ -18,7 +18,7 @@ router.get("/:propertyId/images", getPropertyImages);
 router.post(
   "/:propertyId/images",
   authMiddleware,
-  uploadImageMiddleware,
+  uploadSingleImageMiddleware,
   createPropertyImage
 );
 

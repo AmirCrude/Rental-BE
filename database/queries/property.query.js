@@ -103,10 +103,21 @@ const getAllProperties = async (filters = {}) => {
 
 // ====================== READ - SINGLE PROPERTY ======================
 const getPropertyById = async (id) => {
-  const sql = 'SELECT * FROM properties WHERE id = ?';
-  const [property] = await query(sql, [id]);
-  return property;
+  const sql = 'SELECT * FROM properties WHERE property_id = ?';
+  
+  // 1. Destructure to get the rows (the first element of the result)
+  const [rows] = await query(sql, [id]);
+
+  // 2. Check if the property actually exists
+  if (!rows || rows.length === 0) {
+    return null; // Or throw an error if your service layer expects one
+  }
+
+  console.log("Fetched property rows:", rows); // Debugging log to see the raw result
+  // 3. Return only the single object (the first row)
+  return rows; 
 };
+
 
 // ====================== READ - LANDLORD'S OWN PROPERTIES ======================
 const getPropertiesByLandlordId = async (landlordId) => {

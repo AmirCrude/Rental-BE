@@ -7,13 +7,15 @@ const register = async (data) => {
   if (data.email) {
     const sql = `
       INSERT INTO users
-      (email, password_hash, name)
-      VALUES (?, ?, ?)
+      (email, password_hash, phone_number, name, role)
+      VALUES (?, ?, ?, ?, ?)
     `;
     const params = [
       data.email,
       data.password_hash,
+      data.phone_number,
       data.name,
+      data.role,
     ];
 
     const result = await query(sql, params);

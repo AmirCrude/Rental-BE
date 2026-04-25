@@ -11,7 +11,7 @@ const {
 } = require("../middlewares/validators/register.validate.js");
 const { authMiddleware } = require("../middlewares/auth/auth.middleware.js");
 
-// POST /api/register - register citizen or lawyer
+// POST /api/register
 router.post(
   "/register",
   validateRegistration,

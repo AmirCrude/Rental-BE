@@ -29,15 +29,17 @@ const createPropertyAmenity = async (propertyId, amenityId) => {
 // ====================== READ - AMENITIES LINKED TO A PROPERTY ======================
 const getAmenitiesByPropertyId = async (propertyId) => {
   const sql = `
-    SELECT a.* 
+    SELECT a.amenity_id, a.amenity_name 
     FROM amenities a
-    JOIN property_amenities pa ON a.id = pa.amenity_id
+    JOIN property_amenities pa ON a.amenity_id = pa.amenity_id
     WHERE pa.property_id = ?
-    ORDER BY a.name ASC
+    ORDER BY a.amenity_name ASC
   `;
-  const amenities = await query(sql, [propertyId]);
-  return amenities;
+  // mysql2/promise returns [rows, fields], so destructure the rows
+  const rows = await query(sql, [propertyId]);
+  return rows; 
 };
+
 
 // ====================== DELETE LINK ======================
 const deletePropertyAmenity = async (propertyId, amenityId) => {

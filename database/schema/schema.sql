@@ -20,8 +20,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     phone_number VARCHAR(50),
 
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
+        name VARCHAR(100) NOT NULL,
 
     -- Role determines permissions inside the platform
     role ENUM('tenant','landlord','admin') NOT NULL,
@@ -237,3 +236,45 @@ CREATE TABLE fraud_flags (
     INDEX idx_fraud_property (property_id)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+
+
+Data seed
+
+INSERT INTO users (name, email, phone_number, password_hash, role) VALUES
+('Admin User', 'admin@smartrent.com', '0911000000', '$2b$10$hashed_admin', 'admin'),
+('Landlord One', 'landlord1@smartrent.com', '0911222333', '$2b$10$hashed_landlord1', 'landlord'),
+('Landlord Two', 'landlord2@smartrent.com', '0911333444', '$2b$10$hashed_landlord2', 'landlord'),
+('Tenant One', 'tenant1@smartrent.com', '0911444555', '$2b$10$hashed_tenant1', 'tenant'),
+('Tenant Two', 'tenant2@smartrent.com', '0911555666', '$2b$10$hashed_tenant2', 'tenant');
+
+INSERT INTO properties
+(landlord_id, title, description, price, city, district, property_type, bedrooms, bathrooms, size)
+VALUES
+(2, 'Modern Apartment', '2 bedroom modern apartment', 15000, 'Addis Ababa', 'Bole', 'apartment', 2, 1, 80),
+
+(2, 'Family House', 'Spacious house for family', 25000, 'Addis Ababa', 'CMC', 'house', 3, 2, 150),
+
+(3, 'Studio Apartment', 'Affordable studio for students', 8000, 'Addis Ababa', 'Megenagna', 'studio', 1, 1, 40);
+
+
+INSERT INTO amenities (amenity_name) VALUES
+('WiFi'),
+('Parking'),
+('Security'),
+('Water Tank'),
+('Balcony');
+
+INSERT INTO property_amenities (property_id, amenity_id) VALUES
+(1, 1), -- WiFi
+(1, 2), -- Parking
+(1, 3), -- Security
+
+(2, 2),
+(2, 3),
+(2, 5),
+
+(3, 1),
+(3, 4);
