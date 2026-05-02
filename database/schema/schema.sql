@@ -278,3 +278,17 @@ INSERT INTO property_amenities (property_id, amenity_id) VALUES
 
 (3, 1),
 (3, 4);
+
+
+updates
+
+use rental;
+
+ALTER TABLE properties 
+ADD COLUMN featured BOOLEAN DEFAULT FALSE;
+
+-- Add index for faster featured property queries
+CREATE INDEX idx_properties_featured ON properties(featured);
+
+ALTER TABLE properties 
+MODIFY COLUMN availability_status ENUM('available','rented','pending','maintenance') DEFAULT 'available';

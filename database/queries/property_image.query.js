@@ -26,8 +26,7 @@ const createPropertyImage = async (propertyId, image_url, public_id) => {
 const getImagesByPropertyId = async (propertyId) => {
   const sql = `
     SELECT * FROM property_images 
-    WHERE property_id = ? 
-    ORDER BY created_at ASC
+    WHERE property_id = ?
   `;
   const images = await query(sql, [propertyId]);
   return images;
