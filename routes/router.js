@@ -8,9 +8,13 @@ const registerRouter = require("./register.route");
 const propertyRouter = require("./property.route");
 const propertyImageRouter = require("./property_image.route");
 const propertyAmenityRouter = require("./property_amenity.route");
+const { getHomepageProperties } = require("./../controllers/property.controller.js");
 const router = express.Router();
 
 // API routes
+
+// Homepage route - returns featured and latest properties for the homepage
+router.get("/", getHomepageProperties); 
 
 router.use("/auth", authRouter);
 router.use("/admin", adminRouter);

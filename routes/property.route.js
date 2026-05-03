@@ -8,6 +8,7 @@ const {
   getMyProperties,
   updateProperty,
   deleteProperty,
+  getHomepageProperties,
 } = require("../controllers/property.controller.js");
 
 // Middleware
@@ -15,7 +16,8 @@ const { checkJson } = require("../middlewares/auth/checkJson.middleware.js");
 const { authMiddleware } = require("../middlewares/auth/auth.middleware.js");
 
 // ====================== PUBLIC ROUTES (tenants can browse) ======================
-router.get("/", getAllProperties);
+// router.get("/", getAllProperties);
+router.get("/", getHomepageProperties);
 router.get("/:id", getPropertyById);
 
 // ====================== PROTECTED ROUTES (landlords only) ======================

@@ -37,7 +37,15 @@ const createProperty = async (propertyData) => {
 // ====================== READ - ALL PROPERTIES (FULL FILTERING) ======================
 const getAllProperties = async (filters = {}) => {
   let sql = `
-    SELECT p.* FROM properties p
+    SELECT 
+      p.*,
+      GROUP_CONCAT(
+        DISTINCT pi.image_url 
+        ORDER BY pi.uploaded_at ASC 
+        SEPARATOR ','
+      ) AS image_urls
+    FROM properties p
+    LEFT JOIN property_images pi ON p.property_id = pi.property_id
     WHERE 1=1
   `;
   const params = [];
@@ -83,7 +91,7 @@ const getAllProperties = async (filters = {}) => {
     const amenityIds = filters.amenities.split(',').map(id => id.trim()).filter(Boolean);
     if (amenityIds.length > 0) {
       sql += `
-        AND p.id IN (
+        AND p.property_id IN (
           SELECT pa.property_id 
           FROM property_amenities pa 
           WHERE pa.amenity_id IN (${amenityIds.map(() => '?').join(',')})
@@ -95,10 +103,87 @@ const getAllProperties = async (filters = {}) => {
     }
   }
 
+  // Group by property to handle multiple images
+  sql += ' GROUP BY p.property_id';
   sql += ' ORDER BY p.created_at DESC';
 
   const properties = await query(sql, params);
-  return properties;
+
+  
+  // Transform the results to parse image URLs into an array
+  return properties.map(property => ({
+    ...property,
+    image_urls: property.image_urls ? property.image_urls.split(',') : [],
+    // Add a primary image URL for convenience
+    primary_image: property.image_urls ? property.image_urls.split(',')[0] : null
+  }));
+};
+
+// ====================== READ - HOMEPAGE PROPERTIES (FEATURED & LATEST) ======================
+// queries/propertyQuery.js
+const getPropertiesByCriteria = async ({ featured = false, limit = 3 }) => {
+  // 1. Ensure limit is a valid integer to avoid SQL driver confusion
+  const cleanLimit = parseInt(limit, 10) || 3;
+
+  let sql = `
+    SELECT p.* 
+    FROM properties p 
+    WHERE p.status = 'active' 
+    AND p.availability_status = 'available'
+  `;
+  const params = [];
+
+  if (featured) {
+    sql += " AND p.featured = 1 ORDER BY RAND()";
+  } else {
+    sql += " ORDER BY p.created_at DESC";
+  }
+
+  // Add the limit placeholder
+  sql += " LIMIT ?";
+  params.push(cleanLimit);
+
+  // 2. Execute Property Query
+  // Note: I added a console.log here to help you debug if it fails again
+  
+  
+  const properties = await query(sql, params);
+  
+  if (!properties || properties.length === 0) return [];
+
+  // 3. Fetch Images
+  const ids = properties.map(p => p.property_id);
+  
+  // Create placeholders (?, ?, ?) based on number of IDs
+  const placeholders = ids.map(() => '?').join(',');
+  
+  const imgSql = `
+    SELECT property_id, image_url 
+    FROM property_images 
+    WHERE property_id IN (${placeholders})
+    ORDER BY uploaded_at ASC
+  `;
+
+  const allImages = await query(imgSql, ids);
+
+
+  // 4. Map images into their respective property objects
+  return properties.map(p => ({
+    ...p,
+    images: allImages
+      .filter(img => img.property_id === p.property_id)
+      .map(img => img.image_url)
+  }));
+};
+
+const getUniqueLocations = async () => {
+  const sql = `
+    SELECT DISTINCT city 
+    FROM properties 
+    WHERE status = 'active' AND availability_status = 'available'
+    ORDER BY city ASC
+  `;
+  return await query(sql);
 };
 
 // ====================== READ - SINGLE PROPERTY ======================
@@ -173,4 +258,6 @@ module.exports = {
   getPropertiesByLandlordId,
   updateProperty,
   deleteProperty,
+  getPropertiesByCriteria,
+  getUniqueLocations,
 };

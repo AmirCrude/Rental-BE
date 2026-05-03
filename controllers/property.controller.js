@@ -41,6 +41,25 @@ const getAllProperties = async (req, res) => {
   }
 };
 
+// GET / - get homepage properties (public)
+const getHomepageProperties = async (req, res) => {
+  try {
+    const data = await propertyService.getHomepageData();
+
+    return res.status(200).json({
+      success: true,
+      data: data // contains featuredTop, latest, featuredBottom
+    });
+  } catch (error) {
+    console.error("Homepage Data Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch homepage properties",
+    });
+  }
+};
+
+
 // GET /properties/:id - get single property (public)
 const getPropertyById = async (req, res) => {
   try {
@@ -129,4 +148,5 @@ module.exports = {
   getMyProperties,
   updateProperty,
   deleteProperty,
+  getHomepageProperties,
 };

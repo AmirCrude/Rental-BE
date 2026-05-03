@@ -11,7 +11,8 @@ const query = async (sql, params = []) => {
   let connection;
   try {
     connection = await pool.getConnection();
-    const [results] = await connection.execute(sql, params);
+    // CHANGED: .execute() to .query()
+    const [results] = await connection.query(sql, params); 
     return results;
   } catch (err) {
     console.error("Database query error:", err.message);

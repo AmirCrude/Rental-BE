@@ -22,6 +22,23 @@ const getAllProperties = async (filters = {}) => {
   return properties;
 };
 
+// services/propertyService.js
+const getHomepageData = async () => {
+  // Fetch everything in parallel to minimize wait time
+  const [featured, latest, locations] = await Promise.all([
+    propertyQuery.getPropertiesByCriteria({ featured: true, limit: 6 }),
+    propertyQuery.getPropertiesByCriteria({ featured: false, limit: 3 }),
+    propertyQuery.getUniqueLocations()
+  ]);
+
+  return {
+    featuredTop: featured.slice(0, 3),    // First 3 featured
+    latest: latest,                       // 3 Latest
+    featuredBottom: featured.slice(3, 6),  // Remaining 3 featured
+    locations: locations.map(l => l.city)
+  };
+};
+
 const getPropertyById = async (id) => {
   console.log("Fetching property with ID:", id);
   const property = await propertyQuery.getPropertyById(id);
@@ -84,4 +101,5 @@ module.exports = {
   getMyProperties,
   updateProperty,
   deleteProperty,
+  getHomepageData,
 };
