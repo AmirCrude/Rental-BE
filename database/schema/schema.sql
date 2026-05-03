@@ -292,3 +292,8 @@ CREATE INDEX idx_properties_featured ON properties(featured);
 
 ALTER TABLE properties 
 MODIFY COLUMN availability_status ENUM('available','rented','pending','maintenance') DEFAULT 'available';
+
+
+ALTER TABLE properties
+ADD COLUMN latitude DECIMAL(10, 8) NULL,
+ADD COLUMN longitude DECIMAL(11, 8) NULL;

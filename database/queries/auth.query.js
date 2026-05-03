@@ -10,6 +10,7 @@ const getUserByEmail = async (email) => {
       name,
       email,
       password_hash,
+      role,
       created_at
     FROM users
     WHERE email = ?

@@ -40,7 +40,6 @@ const getHomepageData = async () => {
 };
 
 const getPropertyById = async (id) => {
-  console.log("Fetching property with ID:", id);
   const property = await propertyQuery.getPropertyById(id);
   if (!property) {
     throw new Error("Property not found");

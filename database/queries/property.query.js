@@ -36,61 +36,53 @@ const createProperty = async (propertyData) => {
 
 // ====================== READ - ALL PROPERTIES (FULL FILTERING) ======================
 const getAllProperties = async (filters = {}) => {
-  let sql = `
-    SELECT 
-      p.*,
-      GROUP_CONCAT(
-        DISTINCT pi.image_url 
-        ORDER BY pi.uploaded_at ASC 
-        SEPARATOR ','
-      ) AS image_urls
-    FROM properties p
-    LEFT JOIN property_images pi ON p.property_id = pi.property_id
-    WHERE 1=1
-  `;
-  const params = [];
+  // 1. Pagination Setup
+  const page = parseInt(filters.page) || 1;
+  const limit = parseInt(filters.limit) || 12;
+  const offset = (page - 1) * limit;
 
-  // Existing filters
+  // 2. Build the WHERE clause and params for both Data and Count queries
+  let whereClause = " WHERE 1=1";
+  const queryParams = [];
+
   if (filters.city) {
-    sql += ' AND p.city = ?';
-    params.push(filters.city);
+    whereClause += ' AND p.city = ?';
+    queryParams.push(filters.city);
   }
   if (filters.district) {
-    sql += ' AND p.district = ?';
-    params.push(filters.district);
+    whereClause += ' AND p.district = ?';
+    queryParams.push(filters.district);
   }
   if (filters.min_price) {
-    sql += ' AND p.price >= ?';
-    params.push(parseFloat(filters.min_price));
+    whereClause += ' AND p.price >= ?';
+    queryParams.push(parseFloat(filters.min_price));
   }
   if (filters.max_price) {
-    sql += ' AND p.price <= ?';
-    params.push(parseFloat(filters.max_price));
+    whereClause += ' AND p.price <= ?';
+    queryParams.push(parseFloat(filters.max_price));
   }
   if (filters.property_type) {
-    sql += ' AND p.property_type = ?';
-    params.push(filters.property_type);
+    whereClause += ' AND p.property_type = ?';
+    queryParams.push(filters.property_type);
   }
   if (filters.min_bedrooms) {
-    sql += ' AND p.bedrooms >= ?';
-    params.push(parseInt(filters.min_bedrooms));
+    whereClause += ' AND p.bedrooms >= ?';
+    queryParams.push(parseInt(filters.min_bedrooms));
   }
 
-  // NEW: availability_status (maps to property.status)
+  // Status Filter
   if (filters.availability_status) {
-    sql += ' AND p.status = ?';
-    params.push(filters.availability_status);
+    whereClause += ' AND p.status = ?';
+    queryParams.push(filters.availability_status);
   } else {
-    // Default for tenants: only active properties
-    sql += " AND p.status = 'active'";
+    whereClause += " AND p.status = 'active'";
   }
 
-  // NEW: amenities filtering (comma-separated IDs, e.g. ?amenities=1,3,5)
-  // Properties must have ALL requested amenities
+  // Amenities Filter
   if (filters.amenities) {
     const amenityIds = filters.amenities.split(',').map(id => id.trim()).filter(Boolean);
     if (amenityIds.length > 0) {
-      sql += `
+      whereClause += `
         AND p.property_id IN (
           SELECT pa.property_id 
           FROM property_amenities pa 
@@ -99,25 +91,60 @@ const getAllProperties = async (filters = {}) => {
           HAVING COUNT(DISTINCT pa.amenity_id) = ?
         )
       `;
-      params.push(...amenityIds, amenityIds.length);
+      queryParams.push(...amenityIds, amenityIds.length);
     }
   }
 
-  // Group by property to handle multiple images
-  sql += ' GROUP BY p.property_id';
-  sql += ' ORDER BY p.created_at DESC';
+  // 3. Get TOTAL COUNT for pagination
+  const countSql = `SELECT COUNT(*) as total FROM properties p ${whereClause}`;
+  const countRes = await query(countSql, queryParams);
+  const totalItems = countRes[0]?.total || 0;
+  const totalPages = Math.ceil(totalItems / limit);
 
-  const properties = await query(sql, params);
-
+  // 4. Fetch the specific page of properties
+  let dataSql = `SELECT p.* FROM properties p ${whereClause}`;
+  dataSql += " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
   
-  // Transform the results to parse image URLs into an array
-  return properties.map(property => ({
-    ...property,
-    image_urls: property.image_urls ? property.image_urls.split(',') : [],
-    // Add a primary image URL for convenience
-    primary_image: property.image_urls ? property.image_urls.split(',')[0] : null
-  }));
+  const properties = await query(dataSql, [...queryParams, limit, offset]);
+
+  if (properties.length === 0) {
+    return { data: [], totalItems, totalPages, currentPage: page };
+  }
+
+  // 5. Fetch and Optimize Images for the returned properties
+  const propertyIds = properties.map(p => p.property_id);
+  const imagesSql = `
+    SELECT property_id, image_url 
+    FROM property_images 
+    WHERE property_id IN (${propertyIds.map(() => '?').join(',')})
+    ORDER BY uploaded_at ASC
+  `;
+  
+  const allImages = await query(imagesSql, propertyIds);
+
+  // 6. Map images to properties with Cloudinary Optimization
+  const propertiesWithImages = properties.map(p => {
+    const pImages = allImages
+      .filter(img => img.property_id === p.property_id)
+      .map(img => img.image_url.replace('/upload/', '/upload/c_fill,g_auto,w_500,h_350,f_auto,q_auto/'));
+    
+    return { 
+      ...p, 
+      images: pImages, 
+      mainImage: pImages.length > 0 ? pImages[0] : null 
+    };
+  });
+
+  // 7. Return unified response object
+  return {
+    data: propertiesWithImages,
+    totalItems,
+    totalPages,
+    currentPage: page
+  };
 };
+
+
 
 // ====================== READ - HOMEPAGE PROPERTIES (FEATURED & LATEST) ======================
 // queries/propertyQuery.js
@@ -168,12 +195,19 @@ const getPropertiesByCriteria = async ({ featured = false, limit = 3 }) => {
 
 
   // 4. Map images into their respective property objects
-  return properties.map(p => ({
-    ...p,
-    images: allImages
+  return properties.map(p => {
+    // Filter images belonging to this property
+    const propertyImages = allImages
       .filter(img => img.property_id === p.property_id)
-      .map(img => img.image_url)
-  }));
+      .map(img => img.image_url);
+
+    return {
+      ...p,
+      images: propertyImages,
+      // NEW: Set the first image as mainImage, or null if no images exist
+      mainImage: propertyImages.length > 0 ? propertyImages[0] : null
+    };
+  });
 };
 
 const getUniqueLocations = async () => {
@@ -213,40 +247,40 @@ const getPropertiesByLandlordId = async (landlordId) => {
 
 // ====================== UPDATE PROPERTY ======================
 const updateProperty = async (id, propertyData) => {
-  const sql = `
-    UPDATE properties 
-    SET title = ?, description = ?, price = ?, city = ?, district = ?, 
-        property_type = ?, bedrooms = ?, bathrooms = ?, size = ?, 
-        status = ?, updated_at = NOW()
-    WHERE id = ?
-  `;
-  const params = [
-    propertyData.title,
-    propertyData.description,
-    propertyData.price,
-    propertyData.city,
-    propertyData.district,
-    propertyData.property_type,
-    propertyData.bedrooms,
-    propertyData.bathrooms,
-    propertyData.size,
-    propertyData.status || 'active',
-    id
+  // Define allowed columns to prevent SQL injection or accidental updates
+  const allowedColumns = [
+    'title', 'description', 'price', 'city', 'district', 
+    'property_type', 'bedrooms', 'bathrooms', 'size', 
+    'status', 'availability_status', 'featured'
   ];
+
+  // 1. Filter entries to only include allowed columns and defined values
+  const entries = Object.entries(propertyData).filter(
+    ([key, value]) => allowedColumns.includes(key) && value !== undefined
+  );
+  
+  if (entries.length === 0) return null;
+
+  // 2. Build Dynamic SQL
+  const setClause = entries.map(([key]) => `${key} = ?`).join(', ');
+  const params = entries.map(([_, value]) => value);
+  params.push(id);
+
+  const sql = `UPDATE properties SET ${setClause} WHERE property_id = ?`;
 
   const result = await query(sql, params);
 
-  if (result.affectedRows === 0) {
-    return null;
-  }
+  if (result.affectedRows === 0) return null;
 
-  const [updatedProperty] = await query('SELECT * FROM properties WHERE id = ?', [id]);
-  return updatedProperty;
+  // 3. Return the single updated object
+  const rows = await query('SELECT * FROM properties WHERE property_id = ?', [id]);
+  return rows; // Return the object, not the array
 };
+
 
 // ====================== DELETE PROPERTY ======================
 const deleteProperty = async (id) => {
-  const sql = 'DELETE FROM properties WHERE id = ?';
+  const sql = 'DELETE FROM properties WHERE property_id = ?';
   const result = await query(sql, [id]);
   return result.affectedRows > 0;
 };

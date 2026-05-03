@@ -16,14 +16,16 @@ const { checkJson } = require("../middlewares/auth/checkJson.middleware.js");
 const { authMiddleware } = require("../middlewares/auth/auth.middleware.js");
 
 // ====================== PUBLIC ROUTES (tenants can browse) ======================
-// router.get("/", getAllProperties);
+router.get("/", getAllProperties);
 router.get("/", getHomepageProperties);
-router.get("/:id", getPropertyById);
 
 // ====================== PROTECTED ROUTES (landlords only) ======================
 router.post("/", checkJson, authMiddleware, createProperty);
 router.get("/my", authMiddleware, getMyProperties);
 router.put("/:id", checkJson, authMiddleware, updateProperty);
 router.delete("/:id", authMiddleware, deleteProperty);
+
+// ====================== PUBLIC ROUTE TO GET PROPERTY DETAILS ======================
+router.get("/:id", getPropertyById);
 
 module.exports = router;
