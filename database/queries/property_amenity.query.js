@@ -6,7 +6,7 @@ const { query } = require("../../utils/connection/connections");
 
 // ====================== READ - ALL AVAILABLE AMENITIES ======================
 const getAllAmenities = async () => {
-  const sql = 'SELECT * FROM amenities ORDER BY name ASC';
+  const sql = 'SELECT * FROM amenities ORDER BY amenity_name ASC';
   const amenities = await query(sql);
   return amenities;
 };
@@ -22,7 +22,7 @@ const createPropertyAmenity = async (propertyId, amenityId) => {
   await query(sql, params);
 
   // Return the full amenity details (for frontend convenience)
-  const [amenity] = await query('SELECT * FROM amenities WHERE id = ?', [amenityId]);
+  const [amenity] = await query('SELECT * FROM amenities WHERE amenity_id = ?', [amenityId]);
   return amenity;
 };
 

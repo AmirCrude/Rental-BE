@@ -13,7 +13,7 @@ const { checkJson } = require("../middlewares/auth/checkJson.middleware.js");
 const { authMiddleware } = require("../middlewares/auth/auth.middleware.js");
 
 // ====================== PUBLIC ROUTES ======================
-router.get("/amenities", getAllAmenities);                    // GET /properties/amenities
+router.get("/", getAllAmenities);                    // GET /properties/amenities
 router.get("/:propertyId/amenities", getPropertyAmenities);   // GET /properties/123/amenities
 
 // ====================== PROTECTED ROUTES (landlord only) ======================

@@ -2,31 +2,39 @@ const propertyImageQuery = require("../database/queries/property_image.query");
 const propertyQuery = require("../database/queries/property.query");
 const cloudinaryImageService = require("./cloudinary.image.service");
 
+
 const createPropertyImage = async (user, propertyId, file) => {
   const { role, id: landlord_id } = user;
+  if (role !== "landlord") throw new Error("Unauthorized");
 
-  if (role !== "landlord") {
-    throw new Error("Only landlords can upload property images");
-  }
-
-  // Verify property ownership
+  // Ownership Check
   const property = await propertyQuery.getPropertyById(propertyId);
   if (!property || property.landlord_id !== landlord_id) {
-    throw new Error("Property not found or you are not the owner");
+    throw new Error("Property not found or ownership mismatch");
   }
 
-  // Upload to Cloudinary
-  const uploadResult = await cloudinaryImageService.uploadImage(file);
+  // Pass file.buffer (essential for your Cloudinary upload function)
+  const uploadResult = await cloudinaryImageService.uploadImage(file.buffer);
 
-  // Save to database
-  const newImage = await propertyImageQuery.createPropertyImage(
+  return await propertyImageQuery.createPropertyImage(
     propertyId,
-    uploadResult.url,
+    uploadResult.secure_url,
     uploadResult.public_id
   );
-
-  return newImage;
 };
+
+const saveImageByUrl = async (user, propertyId, url) => {
+  const { role, id: landlord_id } = user;
+  if (role !== "landlord") throw new Error("Unauthorized");
+
+  const property = await propertyQuery.getPropertyById(propertyId);
+  if (!property || property.landlord_id !== landlord_id) {
+    throw new Error("Property not found or ownership mismatch");
+  }
+
+  return await propertyImageQuery.createPropertyImage(propertyId, url, "external_url");
+};
+
 
 const getPropertyImages = async (propertyId) => {
   const images = await propertyImageQuery.getImagesByPropertyId(propertyId);
@@ -67,4 +75,5 @@ module.exports = {
   createPropertyImage,
   getPropertyImages,
   deletePropertyImage,
+  saveImageByUrl,
 };

@@ -22,6 +22,7 @@ router.use(registerRouter);
 router.use("/properties", propertyRouter);
 router.use("/properties", propertyImageRouter);
 router.use("/properties", propertyAmenityRouter);
+router.use("/amenities", propertyAmenityRouter);
 
 
 module.exports = router;

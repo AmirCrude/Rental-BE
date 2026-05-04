@@ -1,31 +1,22 @@
 const express = require("express");
 const router = express.Router({ mergeParams: true });
-
 const {
   createPropertyImage,
   getPropertyImages,
   deletePropertyImage,
 } = require("../controllers/property_image.controller.js");
-
-// Middleware
 const { authMiddleware } = require("../middlewares/auth/auth.middleware.js");
-const { uploadSingleImageMiddleware  } = require("../middlewares/upload/upload.image.middleware.js");
+const { uploadArrayImagesMiddleware } = require("../middlewares/upload/upload.image.middleware.js");
 
-// ====================== PUBLIC ROUTE ======================
 router.get("/:propertyId/images", getPropertyImages);
 
-// ====================== PROTECTED ROUTES (landlord only) ======================
 router.post(
   "/:propertyId/images",
   authMiddleware,
-  uploadSingleImageMiddleware,
+  uploadArrayImagesMiddleware, // Updated to Array
   createPropertyImage
 );
 
-router.delete(
-  "/:propertyId/images/:imageId",
-  authMiddleware,
-  deletePropertyImage
-);
+router.delete("/:propertyId/images/:imageId", authMiddleware, deletePropertyImage);
 
 module.exports = router;

@@ -8,7 +8,7 @@ const { query } = require("../../utils/connection/connections");
 const createPropertyImage = async (propertyId, image_url, public_id) => {
   const sql = `
     INSERT INTO property_images 
-    (property_id, image_url, public_id)
+    (property_id, image_url, cloudinary_public_id)
     VALUES (?, ?, ?)
   `;
   const params = [propertyId, image_url, public_id];
@@ -16,7 +16,7 @@ const createPropertyImage = async (propertyId, image_url, public_id) => {
   const result = await query(sql, params);
 
   // Return the newly inserted image (full object)
-  const [image] = await query("SELECT * FROM property_images WHERE id = ?", [
+  const [image] = await query("SELECT * FROM property_images WHERE image_id = ?", [
     result.insertId,
   ]);
   return image;

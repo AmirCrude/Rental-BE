@@ -41,26 +41,27 @@ const getPropertyAmenities = async (req, res) => {
 // POST /properties/:propertyId/amenities - add amenity to property (landlord only)
 const createPropertyAmenity = async (req, res) => {
   try {
-    const linkedAmenity = await propertyAmenityService.createPropertyAmenity(
-      req.user,
-      req.params.propertyId,
-      req.body.amenity_id
+    const { amenityIds } = req.body; // Matches frontend { amenityIds: [...] }
+    const { propertyId } = req.params;
+
+    // Loop through each ID and call the service
+    const results = await Promise.all(
+      amenityIds.map(id => 
+        propertyAmenityService.createPropertyAmenity(req.user, propertyId, id)
+      )
     );
 
     return res.status(201).json({
       success: true,
-      message: "Amenity added successfully",
-      data: linkedAmenity,
+      message: "Amenities added successfully",
+      data: results,
     });
   } catch (error) {
     console.error("Property Amenity Creation Error:", error);
-
-    return res.status(400).json({
-      success: false,
-      message: error.message || "Failed to add amenity",
-    });
+    return res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 // DELETE /properties/:propertyId/amenities/:amenityId - remove amenity (landlord only)
 const deletePropertyAmenity = async (req, res) => {

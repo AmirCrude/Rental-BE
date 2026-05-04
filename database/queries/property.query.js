@@ -9,11 +9,11 @@ const createProperty = async (propertyData) => {
   const sql = `
     INSERT INTO properties 
     (landlord_id, title, description, price, city, district, property_type, 
-     bedrooms, bathrooms, size, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     bedrooms, bathrooms, size, status, availability_status, created_at, featured, latitude, longitude)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0, ?, ?)
   `;
   const params = [
-    propertyData.landlord_id,
+    propertyData.landlord_id, //
     propertyData.title,
     propertyData.description,
     propertyData.price,
@@ -23,12 +23,15 @@ const createProperty = async (propertyData) => {
     propertyData.bedrooms,
     propertyData.bathrooms,
     propertyData.size,
-    propertyData.status || 'active'
+    propertyData.status || 'active', //
+    propertyData.availability_status || 'available',
+    propertyData.latitude || null,
+    propertyData.longitude || null
   ];
 
   const result = await query(sql, params);
 
-  const [property] = await query("SELECT * FROM properties WHERE id = ?", [
+  const [property] = await query("SELECT * FROM properties WHERE property_id = ?", [
     result.insertId,
   ]);
   return property;
@@ -223,18 +226,11 @@ const getUniqueLocations = async () => {
 // ====================== READ - SINGLE PROPERTY ======================
 const getPropertyById = async (id) => {
   const sql = 'SELECT * FROM properties WHERE property_id = ?';
+  const rows = await query(sql, [id]); // Assuming your query() returns rows directly
+
+  if (!rows || rows.length === 0) return null;
   
-  // 1. Destructure to get the rows (the first element of the result)
-  const [rows] = await query(sql, [id]);
-
-  // 2. Check if the property actually exists
-  if (!rows || rows.length === 0) {
-    return null; // Or throw an error if your service layer expects one
-  }
-
-  console.log("Fetched property rows:", rows); // Debugging log to see the raw result
-  // 3. Return only the single object (the first row)
-  return rows; 
+  return rows[0]; // Return the OBJECT, not the array
 };
 
 

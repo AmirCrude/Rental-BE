@@ -1,28 +1,47 @@
-const propertyImageService = require("../services/property_image.service");
+
 
 // POST /properties/:propertyId/images - upload image (landlord only)
+const propertyImageService = require("../services/property_image.service.js");
+
 const createPropertyImage = async (req, res) => {
   try {
-    const newImage = await propertyImageService.createPropertyImage(
-      req.user,
-      req.params.propertyId,
-      req.file
-    );
+    const { propertyId } = req.params;
+    const files = req.files || []; // Physical files from Multer
+    let { imageUrls } = req.body;  // URL strings from FormData
+
+    // Ensure imageUrls is an array
+    if (!imageUrls) imageUrls = [];
+    if (typeof imageUrls === "string") imageUrls = [imageUrls];
+
+    const results = [];
+
+    // 1. Process physical files (Upload to Cloudinary)
+    for (const file of files) {
+      const newImg = await propertyImageService.createPropertyImage(req.user, propertyId, file);
+      results.push(newImg);
+    }
+
+    // 2. Process existing URLs
+    for (const url of imageUrls) {
+      const newImg = await propertyImageService.saveImageByUrl(req.user, propertyId, url);
+      results.push(newImg);
+    }
 
     return res.status(201).json({
       success: true,
-      message: "Image uploaded successfully",
-      data: newImage,
+      message: "Images processed successfully",
+      data: results,
     });
   } catch (error) {
     console.error("Property Image Upload Error:", error);
-
     return res.status(400).json({
       success: false,
-      message: error.message || "Image upload failed",
+      message: error.message || "Image processing failed",
     });
   }
 };
+
+
 
 // GET /properties/:propertyId/images - get all images for a property (public)
 const getPropertyImages = async (req, res) => {

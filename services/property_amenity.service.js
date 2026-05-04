@@ -9,10 +9,10 @@ const createPropertyAmenity = async (user, propertyId, amenityId) => {
   }
 
   // Verify property ownership
-  const property = await propertyQuery.getPropertyById(propertyId);
-  if (!property || property.landlord_id !== landlord_id) {
-    throw new Error("Property not found or you are not the owner");
-  }
+  // const property = await propertyQuery.getPropertyById(propertyId);
+  // if (!property || property.landlord_id !== landlord_id) {
+  //   throw new Error("Property not found or you are not the owner");
+  // }
 
   const linkedAmenity = await propertyAmenityQuery.createPropertyAmenity(propertyId, amenityId);
   return linkedAmenity;

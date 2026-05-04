@@ -21,7 +21,7 @@ const uploadConfig = multer({
   },
 });
 
-// --- Single Image Middleware ---
+// --- 1. Single Image Middleware ---
 const uploadSingleImage = uploadConfig.single("image");
 
 function uploadSingleImageMiddleware(req, res, next) {
@@ -39,11 +39,35 @@ function uploadSingleImageMiddleware(req, res, next) {
   });
 }
 
-// --- Multiple Images Middleware ---
-const uploadMultipleImages = uploadConfig.array("images", 10);
+// --- 2. Multiple Images Middleware (For Adding Properties) ---
+const uploadArray = uploadConfig.array("images", 10);
 
-// --- Optional Update Images Middleware ---
-// Only validate if files exist in request
+function uploadArrayImagesMiddleware(req, res, next) {
+  uploadArray(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      let message;
+      switch (err.code) {
+        case "LIMIT_FILE_SIZE":
+          message = "Each file must be less than 5MB.";
+          break;
+        case "LIMIT_FILE_COUNT":
+          message = "You can upload a maximum of 10 images.";
+          break;
+        default:
+          message = "An unexpected file was uploaded.";
+      }
+      return res.status(400).json({ success: false, message });
+    } else if (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+    
+    // Ensure req.files is at least an empty array if nothing was uploaded
+    req.files = req.files || [];
+    next();
+  });
+}
+
+// --- 3. Optional Update Images Middleware ---
 function updateImagesValidatorMiddleware(req, res, next) {
   // If no files sent, skip multer validation
   if (
@@ -51,10 +75,9 @@ function updateImagesValidatorMiddleware(req, res, next) {
     !req.headers["content-type"].includes("multipart/form-data")
   ) {
     req.files = [];
-
     return next();
   }
-  console.log(req.files);
+
   const updateImagesValidator = uploadConfig.array("images", 10);
 
   updateImagesValidator(req, res, (err) => {
@@ -80,7 +103,9 @@ function updateImagesValidatorMiddleware(req, res, next) {
   });
 }
 
+// --- Exports ---
 module.exports = {
   uploadSingleImageMiddleware,
+  uploadArrayImagesMiddleware,
   updateImagesValidatorMiddleware,
 };
