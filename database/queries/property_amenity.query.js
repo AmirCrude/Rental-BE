@@ -40,17 +40,35 @@ const getAmenitiesByPropertyId = async (propertyId) => {
   return rows; 
 };
 
+// Get all amenities for a property (you might already have this)
+const getPropertyAmenities = async (propertyId) => {
+  const sql = `
+    SELECT a.* FROM amenities a
+    INNER JOIN property_amenities pa ON a.amenity_id = pa.amenity_id
+    WHERE pa.property_id = ?
+  `;
+  return await query(sql, [propertyId]);
+};
+
+// Delete all amenities for a property
+const deleteAllPropertyAmenities = async (propertyId) => {
+  const sql = 'DELETE FROM property_amenities WHERE property_id = ?';
+  await query(sql, [propertyId]);
+};
+
 
 // ====================== DELETE LINK ======================
 const deletePropertyAmenity = async (propertyId, amenityId) => {
   const sql = 'DELETE FROM property_amenities WHERE property_id = ? AND amenity_id = ?';
-  const result = await query(sql, [propertyId, amenityId]);
-  return result.affectedRows > 0;
+  await query(sql, [propertyId, amenityId]);
 };
 
 module.exports = {
   getAllAmenities,
   createPropertyAmenity,
   getAmenitiesByPropertyId,
+  getPropertyAmenities,
   deletePropertyAmenity,
+  deleteAllPropertyAmenities,
+
 };

@@ -41,6 +41,24 @@ const getAllProperties = async (req, res) => {
   }
 };
 
+const getAllPropertiesMap = async (req, res) => {
+  try {
+    const properties = await propertyService.getAllPropertiesMap(req.query);
+
+    return res.status(200).json({
+      success: true,
+      data: properties,
+    });
+  } catch (error) {
+    console.error("Get Properties Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch properties",
+    });
+  }
+};
+
 // GET / - get homepage properties (public)
 const getHomepageProperties = async (req, res) => {
   try {
@@ -149,4 +167,5 @@ module.exports = {
   updateProperty,
   deleteProperty,
   getHomepageProperties,
+  getAllPropertiesMap,
 };

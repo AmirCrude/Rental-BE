@@ -62,6 +62,32 @@ const createPropertyAmenity = async (req, res) => {
   }
 };
 
+// PUT /properties/:propertyId/amenities - update all amenities for a property
+const updatePropertyAmenities = async (req, res) => {
+  try {
+    const { amenityIds } = req.body; // Array of amenity IDs to set
+    const { propertyId } = req.params;
+
+    const result = await propertyAmenityService.updatePropertyAmenities(
+      req.user,
+      propertyId,
+      amenityIds
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Amenities updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Property Amenities Update Error:", error);
+    return res.status(400).json({ 
+      success: false, 
+      message: error.message || "Failed to update amenities" 
+    });
+  }
+};
+
 
 // DELETE /properties/:propertyId/amenities/:amenityId - remove amenity (landlord only)
 const deletePropertyAmenity = async (req, res) => {
@@ -90,5 +116,6 @@ module.exports = {
   getAllAmenities,
   getPropertyAmenities,
   createPropertyAmenity,
+  updatePropertyAmenities,
   deletePropertyAmenity,
 };

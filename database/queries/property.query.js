@@ -147,6 +147,26 @@ const getAllProperties = async (filters = {}) => {
   };
 };
 
+const getAllPropertiesMap = async () => {
+  // 1. Fetch ALL active properties with no filters
+  let dataSql = `
+    SELECT p.* 
+    FROM properties p 
+    WHERE p.status = 'active'
+    ORDER BY p.created_at DESC
+  `;
+  
+  const properties = await query(dataSql);
+
+  // 2. Return all properties directly (no images needed for map)
+  return {
+    data: properties,
+    totalItems: properties.length,
+    totalPages: 1,
+    currentPage: 1
+  };
+};
+
 
 
 // ====================== READ - HOMEPAGE PROPERTIES (FEATURED & LATEST) ======================
@@ -290,4 +310,5 @@ module.exports = {
   deleteProperty,
   getPropertiesByCriteria,
   getUniqueLocations,
+  getAllPropertiesMap,
 };

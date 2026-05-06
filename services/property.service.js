@@ -22,6 +22,11 @@ const getAllProperties = async (filters = {}) => {
   return properties;
 };
 
+const getAllPropertiesMap = async (filters = {}) => {
+  const properties = await propertyQuery.getAllPropertiesMap(filters);
+  return properties;
+};
+
 // services/propertyService.js
 const getHomepageData = async () => {
   // Fetch everything in parallel to minimize wait time
@@ -101,4 +106,5 @@ module.exports = {
   updateProperty,
   deleteProperty,
   getHomepageData,
+  getAllPropertiesMap,
 };

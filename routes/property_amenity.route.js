@@ -5,6 +5,7 @@ const {
   getAllAmenities,
   getPropertyAmenities,
   createPropertyAmenity,
+  updatePropertyAmenities, 
   deletePropertyAmenity,
 } = require("../controllers/property_amenity.controller.js");
 
@@ -17,12 +18,22 @@ router.get("/", getAllAmenities);                    // GET /properties/amenitie
 router.get("/:propertyId/amenities", getPropertyAmenities);   // GET /properties/123/amenities
 
 // ====================== PROTECTED ROUTES (landlord only) ======================
+
+router.put(
+  "/:propertyId/amenities",
+  checkJson,
+  authMiddleware,
+  updatePropertyAmenities
+);
+
 router.post(
   "/:propertyId/amenities",
   checkJson,
   authMiddleware,
   createPropertyAmenity
 );
+
+
 
 router.delete(
   "/:propertyId/amenities/:amenityId",
