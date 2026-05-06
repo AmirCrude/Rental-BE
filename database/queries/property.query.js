@@ -73,6 +73,12 @@ const getAllProperties = async (filters = {}) => {
     queryParams.push(parseInt(filters.min_bedrooms));
   }
 
+  if (filters.search) {
+    whereClause += ' AND (p.title LIKE ? OR p.city LIKE ? OR p.district LIKE ?)';
+    const searchPattern = `%${filters.search}%`;
+    queryParams.push(searchPattern, searchPattern, searchPattern);
+  }
+
   // Status Filter
   if (filters.availability_status) {
     whereClause += ' AND p.status = ?';

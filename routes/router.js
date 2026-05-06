@@ -8,11 +8,13 @@ const propertyRouter = require("./property.route");
 const propertyImageRouter = require("./property_image.route");
 const propertyAmenityRouter = require("./property_amenity.route");
 const { getHomepageProperties } = require("./../controllers/property.controller.js");
+const { getUserById } = require("../controllers/user.controller.js");
 
 const router = express.Router();
 
 // Homepage route - returns featured and latest properties for the homepage
 router.get("/homepage", getHomepageProperties);
+router.get("/users/:id", getUserById)
 
 // Mount route modules
 router.use("/auth", authRouter);

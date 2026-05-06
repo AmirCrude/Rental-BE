@@ -28,13 +28,11 @@ const getUserById = async (id) => {
   const sql = `
     SELECT 
       user_id,
-      first_name,
-      last_name,
       email,
-      phone_number,
       password_hash,
+      phone_number,
+      name,
       role,
-      is_verified,
       created_at
     FROM users
     WHERE user_id = ?

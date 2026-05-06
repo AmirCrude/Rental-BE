@@ -29,8 +29,9 @@ const getUserById = async (id) => {
     const sql = `
       SELECT 
         user_id,
-        name,
         email,
+        name,
+        phone_number,
         password_hash,
         created_at
       FROM users
