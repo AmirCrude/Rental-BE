@@ -9,11 +9,11 @@ const createProperty = async (propertyData) => {
   const sql = `
     INSERT INTO properties 
     (landlord_id, title, description, price, city, district, property_type, 
-     bedrooms, bathrooms, size, status, availability_status, created_at, featured, latitude, longitude)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0, ?, ?)
+     bedrooms, bathrooms, size, floor_number, status, availability_status, created_at, featured, latitude, longitude)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0, ?, ?)
   `;
   const params = [
-    propertyData.landlord_id, //
+    propertyData.landlord_id,
     propertyData.title,
     propertyData.description,
     propertyData.price,
@@ -23,7 +23,8 @@ const createProperty = async (propertyData) => {
     propertyData.bedrooms,
     propertyData.bathrooms,
     propertyData.size,
-    propertyData.status || 'active', //
+    propertyData.floor_number || null,  // ADD THIS
+    propertyData.status || 'active',
     propertyData.availability_status || 'available',
     propertyData.latitude || null,
     propertyData.longitude || null

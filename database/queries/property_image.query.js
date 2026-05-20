@@ -34,14 +34,14 @@ const getImagesByPropertyId = async (propertyId) => {
 
 // ====================== READ - SINGLE IMAGE ======================
 const getImageById = async (imageId) => {
-  const sql = 'SELECT * FROM property_images WHERE id = ?';
+  const sql = 'SELECT * FROM property_images WHERE image_id = ?';
   const [image] = await query(sql, [imageId]);
   return image;
 };
 
 // ====================== DELETE PROPERTY IMAGE ======================
 const deletePropertyImage = async (imageId) => {
-  const sql = 'DELETE FROM property_images WHERE id = ?';
+  const sql = 'DELETE FROM property_images WHERE image_id = ?';
   const result = await query(sql, [imageId]);
   return result.affectedRows > 0;
 };

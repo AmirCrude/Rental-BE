@@ -50,6 +50,7 @@ const deletePropertyImage = async (user, imageId) => {
 
   // Verify ownership via the image's property
   const image = await propertyImageQuery.getImageById(imageId);
+  console.log("Image to delete:", image);
   if (!image) {
     throw new Error("Image not found");
   }
@@ -60,7 +61,7 @@ const deletePropertyImage = async (user, imageId) => {
   }
 
   // Delete from Cloudinary
-  await cloudinaryImageService.deleteImage(image.public_id);
+  await cloudinaryImageService.deleteImage(image.cloudinary_public_id);
 
   // Delete from database
   const success = await propertyImageQuery.deletePropertyImage(imageId);
