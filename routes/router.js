@@ -9,6 +9,7 @@ const propertyImageRouter = require("./property_image.route");
 const propertyAmenityRouter = require("./property_amenity.route");
 const { getHomepageProperties } = require("./../controllers/property.controller.js");
 const { getUserById } = require("../controllers/user.controller.js");
+const bookingRouter = require("./booking.route");
 
 const router = express.Router();
 
@@ -24,5 +25,7 @@ router.use("/properties", propertyRouter);
 router.use("/properties", propertyImageRouter);
 router.use("/properties", propertyAmenityRouter);
 router.use("/amenities", propertyAmenityRouter);
+router.use("/bookings", bookingRouter);
+
 
 module.exports = router;

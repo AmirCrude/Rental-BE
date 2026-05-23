@@ -80,12 +80,15 @@ const getAllProperties = async (filters = {}) => {
     queryParams.push(searchPattern, searchPattern, searchPattern);
   }
 
-  // Status Filter
+  // Status Filter - Always show only active properties
+  whereClause += " AND p.status = 'active'";
+
+  // Availability Filter - Default to available unless specified
   if (filters.availability_status) {
-    whereClause += ' AND p.status = ?';
+    whereClause += ' AND p.availability_status = ?';
     queryParams.push(filters.availability_status);
   } else {
-    whereClause += " AND p.status = 'active'";
+    whereClause += " AND p.availability_status = 'available'";
   }
 
   // Amenities Filter
@@ -308,6 +311,15 @@ const deleteProperty = async (id) => {
   return result.affectedRows > 0;
 };
 
+const updatePropertyStatus = async (propertyId, status) => {
+  await query(
+    "UPDATE properties SET availability_status = ? WHERE property_id = ?",
+    [status, propertyId]
+  );
+  const [property] = await query("SELECT * FROM properties WHERE property_id = ?", [propertyId]);
+  return property;
+};
+
 module.exports = {
   createProperty,
   getAllProperties,
@@ -318,4 +330,5 @@ module.exports = {
   getPropertiesByCriteria,
   getUniqueLocations,
   getAllPropertiesMap,
+  updatePropertyStatus,
 };
