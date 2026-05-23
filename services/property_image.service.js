@@ -1,20 +1,21 @@
 const propertyImageQuery = require("../database/queries/property_image.query");
 const propertyQuery = require("../database/queries/property.query");
-const cloudinaryImageService = require("./cloudinary.image.service");
-
+const localImageService = require("./local.image.service");
 
 const createPropertyImage = async (user, propertyId, file) => {
   const { role, id: landlord_id } = user;
   if (role !== "landlord") throw new Error("Unauthorized");
 
-  // Ownership Check
   const property = await propertyQuery.getPropertyById(propertyId);
   if (!property || property.landlord_id !== landlord_id) {
     throw new Error("Property not found or ownership mismatch");
   }
 
-  // Pass file.buffer (essential for your Cloudinary upload function)
-  const uploadResult = await cloudinaryImageService.uploadImage(file.buffer);
+  const uploadResult = await localImageService.uploadImage(
+    file.buffer,
+    propertyId,
+    file.originalname
+  );
 
   return await propertyImageQuery.createPropertyImage(
     propertyId,
@@ -35,7 +36,6 @@ const saveImageByUrl = async (user, propertyId, url) => {
   return await propertyImageQuery.createPropertyImage(propertyId, url, "external_url");
 };
 
-
 const getPropertyImages = async (propertyId) => {
   const images = await propertyImageQuery.getImagesByPropertyId(propertyId);
   return images;
@@ -48,9 +48,7 @@ const deletePropertyImage = async (user, imageId) => {
     throw new Error("Only landlords can delete property images");
   }
 
-  // Verify ownership via the image's property
   const image = await propertyImageQuery.getImageById(imageId);
-  console.log("Image to delete:", image);
   if (!image) {
     throw new Error("Image not found");
   }
@@ -60,10 +58,9 @@ const deletePropertyImage = async (user, imageId) => {
     throw new Error("You are not the owner of this property");
   }
 
-  // Delete from Cloudinary
-  await cloudinaryImageService.deleteImage(image.cloudinary_public_id);
+  // Delete from local storage (use cloudinary_public_id field which now stores filename)
+  await localImageService.deleteImage(image.cloudinary_public_id);
 
-  // Delete from database
   const success = await propertyImageQuery.deletePropertyImage(imageId);
   if (!success) {
     throw new Error("Failed to delete image");

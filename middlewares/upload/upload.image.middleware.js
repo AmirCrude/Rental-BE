@@ -1,27 +1,22 @@
 const multer = require("multer");
+const { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } = require("../../configs/upload.config");
 
-// Use memory storage to keep uploaded files as buffers
 const storage = multer.memoryStorage();
 
-// Allowed image MIME types for validation
-const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif"];
-
-// --- Multer Configuration ---
 const uploadConfig = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // Max 5MB
+    fileSize: MAX_FILE_SIZE,
   },
   fileFilter: (req, file, cb) => {
-    if (allowedMimeTypes.includes(file.mimetype)) {
+    if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Only JPEG, PNG, and GIF image files are allowed."), false);
+      cb(new Error("Only JPEG, PNG, and WebP image files are allowed."), false);
     }
   },
 });
 
-// --- 1. Single Image Middleware ---
 const uploadSingleImage = uploadConfig.single("image");
 
 function uploadSingleImageMiddleware(req, res, next) {
@@ -39,7 +34,6 @@ function uploadSingleImageMiddleware(req, res, next) {
   });
 }
 
-// --- 2. Multiple Images Middleware (For Adding Properties) ---
 const uploadArray = uploadConfig.array("images", 10);
 
 function uploadArrayImagesMiddleware(req, res, next) {
@@ -61,15 +55,12 @@ function uploadArrayImagesMiddleware(req, res, next) {
       return res.status(400).json({ success: false, message: err.message });
     }
     
-    // Ensure req.files is at least an empty array if nothing was uploaded
     req.files = req.files || [];
     next();
   });
 }
 
-// --- 3. Optional Update Images Middleware ---
 function updateImagesValidatorMiddleware(req, res, next) {
-  // If no files sent, skip multer validation
   if (
     !req.headers["content-type"] ||
     !req.headers["content-type"].includes("multipart/form-data")
@@ -103,7 +94,6 @@ function updateImagesValidatorMiddleware(req, res, next) {
   });
 }
 
-// --- Exports ---
 module.exports = {
   uploadSingleImageMiddleware,
   uploadArrayImagesMiddleware,
