@@ -26,6 +26,8 @@ router.use("/properties", propertyImageRouter);
 router.use("/properties", propertyAmenityRouter);
 router.use("/amenities", propertyAmenityRouter);
 router.use("/bookings", bookingRouter);
+router.use("/admin", adminRouter);
+
 
 
 module.exports = router;

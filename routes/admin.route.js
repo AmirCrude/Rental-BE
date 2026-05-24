@@ -1,23 +1,31 @@
 const express = require("express");
 const router = express.Router();
 
-// Controller
+const {
+  getStats,
+  getUsers,
+  getProperties,
+  getFlagged,
+  updatePropertyStatus,
+  banUser,
+  unbanUser,
+  getActivity,
+} = require("../controllers/admin.controller");
 
-// Validator
-
-// Authentication & Role
 const { authMiddleware } = require("../middlewares/auth/auth.middleware");
-const { requireAdmin } = require("../middlewares/auth/admin.auth.middleware");
-const { checkJson } = require("../middlewares/auth/checkJson.middleware");
+const { adminAuthMiddleware } = require("../middlewares/auth/admin.auth.middleware");
 
-// Admin Routes
+// All admin routes require auth + admin role
+router.use(authMiddleware, adminAuthMiddleware);
 
-// Create government official
-router.post(
-  "/government-official",
-  authMiddleware,
-  requireAdmin,
-  checkJson
-);
+router.get("/stats", getStats);
+router.get("/users", getUsers);
+router.get("/properties", getProperties);
+router.get("/flagged", getFlagged);
+router.get("/activity", getActivity);
+
+router.put("/properties/:id/status", updatePropertyStatus);
+router.put("/users/:id/ban", banUser);
+router.put("/users/:id/unban", unbanUser);
 
 module.exports = router;
