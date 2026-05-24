@@ -10,6 +10,7 @@ const propertyAmenityRouter = require("./property_amenity.route");
 const { getHomepageProperties } = require("./../controllers/property.controller.js");
 const { getUserById } = require("../controllers/user.controller.js");
 const bookingRouter = require("./booking.route");
+const aiRouter = require("./ai.route");
 
 const router = express.Router();
 
@@ -27,6 +28,8 @@ router.use("/properties", propertyAmenityRouter);
 router.use("/amenities", propertyAmenityRouter);
 router.use("/bookings", bookingRouter);
 router.use("/admin", adminRouter);
+router.use("/ai", aiRouter);
+
 
 
 

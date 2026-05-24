@@ -1,3 +1,4 @@
+const aiService = require("./ai.service");
 const propertyQuery = require("../database/queries/property.query");
 
 const createProperty = async (user, propertyData) => {
@@ -96,6 +97,28 @@ const deleteProperty = async (user, id) => {
     throw new Error("Failed to delete property");
   }
   return { message: "Property deleted successfully" };
+};
+
+const searchPropertiesWithAI = async (filters) => {
+  // If search contains natural language, enhance it with AI
+  if (filters.search && isNaN(filters.search) && filters.search.length > 5) {
+    try {
+      const enhanced = await aiService.enhanceSearch(filters.search);
+      if (enhanced) {
+        if (enhanced.district && !filters.district) filters.district = enhanced.district;
+        if (enhanced.min_bedrooms && !filters.min_bedrooms) filters.min_bedrooms = enhanced.min_bedrooms;
+        if (enhanced.max_price && !filters.max_price) filters.max_price = enhanced.max_price;
+        // Keep original search for title matching, add keywords
+        if (enhanced.keywords?.length > 0) {
+          filters.search = enhanced.keywords.join(" ");
+        }
+      }
+    } catch (error) {
+      console.error("AI search failed, using original:", error);
+    }
+  }
+  
+  return await propertyQuery.getAllProperties(filters);
 };
 
 module.exports = {
