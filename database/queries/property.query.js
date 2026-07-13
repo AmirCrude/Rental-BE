@@ -70,8 +70,12 @@ const getAllProperties = async (filters = {}) => {
     queryParams.push(filters.property_type);
   }
   if (filters.min_bedrooms) {
-    whereClause += ' AND p.bedrooms >= ?';
-    queryParams.push(parseInt(filters.min_bedrooms));
+    if (filters.min_bedrooms === '4+') {
+      whereClause += ' AND p.bedrooms >= 4';
+    } else {
+      whereClause += ' AND p.bedrooms = ?';
+      queryParams.push(parseInt(filters.min_bedrooms));
+    }
   }
 
   if (filters.search) {
@@ -312,8 +316,9 @@ const deleteProperty = async (id) => {
 };
 
 const updatePropertyStatus = async (propertyId, status) => {
+  console.log("Updating property status:", { propertyId, status }); // Debug log
   await query(
-    "UPDATE properties SET availability_status = ? WHERE property_id = ?",
+    "UPDATE properties SET status = ? WHERE property_id = ?",
     [status, propertyId]
   );
   const [property] = await query("SELECT * FROM properties WHERE property_id = ?", [propertyId]);

@@ -1,11 +1,68 @@
 const propertyService = require("../services/property.service");
+const { checkFraud } = require("../services/fraud.service");
+const fraudQuery = require("../database/queries/fraud.query");
+const propertyAmenityQuery = require("../database/queries/property_amenity.query");
+const propertyQuery = require("../database/queries/property.query");
+
+const typeMap = {
+  'apartment': 'Apartment Building',
+  'studio': 'Condominium',
+  'commercial': 'Apartment Building',
+  'house': 'Townhouse',
+  'villa': 'Villa Compound',
+};
 
 // POST /properties - create property (landlord only)
 const createProperty = async (req, res) => {
   try {
+    // 1. Create the property
     const newProperty = await propertyService.createProperty(req.user, {
       ...req.body,
     });
+
+    const propertyData = req.body;
+    console.log("New property created:", propertyData);
+
+    // 2. Get amenity names from the request body directly
+    let amenityNames = [];
+    if (propertyData.amenityIds && propertyData.amenityIds.length > 0) {
+      const allAmenities = await propertyAmenityQuery.getAllAmenities();
+      amenityNames = allAmenities
+        .filter(a => propertyData.amenityIds.includes(a.amenity_id))
+        .map(a => a.amenity_name);
+    }
+
+    // 3. Run fraud detection for non-commercial properties
+    if (propertyData.property_type !== 'commercial') {
+      try {
+        propertyData.listing_age_days = 0;
+        propertyData.views = 0;
+        propertyData.contact_clicks = 0;
+
+        const fraudResult = await checkFraud(propertyData, amenityNames);
+
+        if (fraudResult && fraudResult.fraud_probability !== undefined) {
+          await fraudQuery.createFraudFlag(
+            newProperty.property_id,
+            fraudResult.fraud_probability,
+            fraudResult.is_fraud ? 'AI detected suspicious patterns' : null
+          );
+
+          if (fraudResult.is_fraud) {
+            await propertyQuery.updatePropertyStatus(newProperty.property_id, 'flagged');
+            console.log(`🚩 Fraud detected! Property #${newProperty.property_id} FLAGGED. Score: ${(fraudResult.fraud_probability * 100).toFixed(1)}%`);
+          } else {
+            console.log(`✅ Property #${newProperty.property_id} passed. Score: ${(fraudResult.fraud_probability * 100).toFixed(1)}%`);
+          }
+        } else {
+          console.log("⚠️ No valid fraud result returned");
+        }
+      } catch (fraudErr) {
+        console.error("❌ Fraud check failed:", fraudErr.message);
+      }
+    } else {
+      console.log(`🏢 Commercial property #${newProperty.property_id} - fraud check skipped`);
+    }
 
     return res.status(201).json({
       success: true,
@@ -66,7 +123,7 @@ const getHomepageProperties = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: data // contains featuredTop, latest, featuredBottom
+      data: data
     });
   } catch (error) {
     console.error("Homepage Data Error:", error);
@@ -76,7 +133,6 @@ const getHomepageProperties = async (req, res) => {
     });
   }
 };
-
 
 // GET /properties/:id - get single property (public)
 const getPropertyById = async (req, res) => {

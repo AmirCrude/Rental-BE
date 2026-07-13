@@ -11,6 +11,10 @@ const { getHomepageProperties } = require("./../controllers/property.controller.
 const { getUserById } = require("../controllers/user.controller.js");
 const bookingRouter = require("./booking.route");
 const aiRouter = require("./ai.route");
+const fraudRouter = require("./fraud.route");
+
+// Add this with other route mounts:
+
 
 const router = express.Router();
 
@@ -29,6 +33,7 @@ router.use("/amenities", propertyAmenityRouter);
 router.use("/bookings", bookingRouter);
 router.use("/admin", adminRouter);
 router.use("/ai", aiRouter);
+router.use("/fraud", fraudRouter);
 
 
 

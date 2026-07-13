@@ -1,6 +1,8 @@
 swagger-output.json
 swagger.js
 
+uploads
+
 # Logs
 logs
 *.log
